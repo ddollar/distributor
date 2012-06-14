@@ -25,7 +25,7 @@ class Distributor::Packet
   end
 
   def self.pack(num)
-    [num.to_s(16).rjust(8,"0")].pack("H8")
+    [num].pack("N")
   end
 
   def self.unpack(string)
