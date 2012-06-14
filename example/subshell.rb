@@ -36,7 +36,7 @@ else
     Thread.new do
       loop do
         Thread.start(tcp.accept) do |tcp_client|
-          client.tunnel(5000) do |ch|
+          client.tunnel(nil) do |ch|
             client.hookup ch, tcp_client
           end
         end

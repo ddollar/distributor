@@ -30,8 +30,9 @@ class Distributor::Server
       dequeue_json do |data|
         case command = data["command"]
         when "tunnel" then
-          ch = tunnel(data["port"])
-          @multiplexer.output 0, JSON.dump({ "id" => data["id"], "command" => "ack", "ch" => ch })
+          port = (data["port"] || ENV["PORT"] || 5000).to_i
+          ch = tunnel(port)
+          @multiplexer.output 0, JSON.dump({ "id" => data["id"], "command" => "ack", "ch" => ch, "port" => port })
         when "close" then
           @multiplexer.close data["ch"]
         when "run" then
