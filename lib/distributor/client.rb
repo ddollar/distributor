@@ -31,6 +31,7 @@ class Distributor::Client
 
       dequeue_json do |data|
         case command = data["command"]
+        when "hello" then
         when "close" then
           ch = data["ch"]
           @on_close[ch].each { |c| c.call(ch) }

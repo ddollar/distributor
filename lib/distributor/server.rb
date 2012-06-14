@@ -91,6 +91,7 @@ class Distributor::Server
     ch
   end
   def start
+    @multiplexer.output 0, JSON.dump({ "command" => "hello" })
     loop { @connector.listen }
   end
 
