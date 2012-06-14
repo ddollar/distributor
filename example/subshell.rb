@@ -6,28 +6,8 @@ require "distributor/client"
 require "distributor/server"
 
 def set_buffer(enable)
-  with_tty do
-    if enable
-      `stty icanon echo`
-    else
-      `stty -icanon -echo`
-    end
-  end
-end
-
-def with_tty(&block)
   return unless $stdin.isatty
-  begin
-    yield
-  rescue
-    # fails on windows
-  end
-end
-
-def get_terminal_environment
-  { "TERM" => ENV["TERM"], "COLUMNS" => `tput cols`.strip, "LINES" => `tput lines`.strip }
-rescue
-  { "TERM" => ENV["TERM"] }
+  enable ? `stty icanon echo` : `stty -icanon -echo`
 end
 
 if ARGV.first == "server"
