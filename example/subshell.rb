@@ -54,7 +54,6 @@ else
     tcp = TCPServer.new(8000)
 
     Thread.new do
-      tcp = TCPServer.new 8000
       loop do
         Thread.start(tcp.accept) do |tcp_client|
           client.tunnel(5000) do |ch|
