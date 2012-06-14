@@ -63,14 +63,11 @@ else
       end
     end
 
-    client.tunnel(5000) do |ch|
-
-    end
-
     set_buffer false
     client.start
-    set_buffer true
   rescue Interrupt
+  ensure
+    set_buffer true
   end
 
 end
