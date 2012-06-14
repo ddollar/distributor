@@ -31,11 +31,11 @@ class Distributor::Multiplexer
     return if ch.nil?
     writer(ch).write data
   rescue IOError
-    @output.write Distributor::Packet.create(0, JSON.dump({ "command" => "close", "ch" => ch }))
+    output 0, JSON.dump({ "command" => "close", "ch" => ch })
   end
 
   def output(ch, data)
-    @output.write Distributor::Packet.create(ch, data)
+    Distributor::Packet.write(@output, ch, data)
   rescue Errno::EPIPE
   end
 
