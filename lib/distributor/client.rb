@@ -11,6 +11,7 @@ class Distributor::Client
     @handlers    = {}
     @processes   = []
     @on_close    = Hash.new([])
+    @on_hello    = []
 
     # reserve a command channel
     @multiplexer.reserve(0)
@@ -32,6 +33,7 @@ class Distributor::Client
       dequeue_json do |data|
         case command = data["command"]
         when "hello" then
+          @on_hello.each { |c| c.call }
         when "close" then
           ch = data["ch"]
           @on_close[ch].each { |c| c.call(ch) }
@@ -89,6 +91,10 @@ class Distributor::Client
 
   def on_close(ch, &blk)
     @on_close[ch] << blk
+  end
+
+  def on_hello(&blk)
+    @on_hello << blk
   end
 
   def start
