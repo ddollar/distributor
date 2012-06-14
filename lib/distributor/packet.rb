@@ -1,15 +1,18 @@
 require "distributor"
+require "stringio"
 
 class Distributor::Packet
 
   PROTOCOL_VERSION = 1
 
   def self.create(channel, data)
-    packet = "DIST"
-    packet += pack(PROTOCOL_VERSION)
-    packet += pack(channel)
-    packet += pack(data.length)
-    packet += data
+    io = StringIO.new
+    io.write "DIST"
+    io.write pack(PROTOCOL_VERSION)
+    io.write pack(channel)
+    io.write pack(data.length)
+    io.write data
+    io.string
   end
 
   def self.parse(io)
