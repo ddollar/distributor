@@ -20,9 +20,15 @@ class Distributor::Connector
   def listen
     rs, ws = IO.select(@connections.keys)
     rs.each do |from|
-      @on_close.each { |c| c.call } if from.eof?
+      @on_close.each { |c| c.call(from) } if from.eof?
       self.connections[from].call(from)
     end
+  end
+
+  def close(io)
+    @connections.delete(io)
+    @on_close[io].each { |c| c.call(io) }
+    exit 1
   end
 
 end

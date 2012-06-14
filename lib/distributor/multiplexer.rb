@@ -40,7 +40,7 @@ class Distributor::Multiplexer
   end
 
   def close(ch)
-    writer(ch).close
+    output 0, JSON.dump({ "command" => "close", "ch" => ch })
   rescue IOError
   end
 

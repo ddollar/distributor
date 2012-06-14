@@ -51,6 +51,23 @@ else
       end
     end
 
+    tcp = TCPServer.new(8000)
+
+    Thread.new do
+      tcp = TCPServer.new 8000
+      loop do
+        Thread.start(tcp.accept) do |tcp_client|
+          client.tunnel(5000) do |ch|
+            client.hookup ch, tcp_client
+          end
+        end
+      end
+    end
+
+    client.tunnel(5000) do |ch|
+
+    end
+
     set_buffer false
     client.start
     set_buffer true

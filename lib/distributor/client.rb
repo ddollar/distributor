@@ -20,26 +20,29 @@ class Distributor::Client
       @multiplexer.input io
     end
 
-    @connector.on_close(input) do |io|
-      @multiplexer.output 0, JSON.dump({ "command" => "close", "ch" => ch })
-    end
+    # @connector.on_close(input) do |io|
+    #   p [:cl1, input]
+    #   @multiplexer.output 0, JSON.dump({ "command" => "close", "ch" => ch })
+    # end
 
     # handle the command channel of the multiplexer
     @connector.handle(@multiplexer.reader(0)) do |io|
-      data = JSON.parse(io.readpartial(4096))
+      append_json(io.readpartial(4096))
 
-      case command = data["command"]
-      when "close" then
-        ch = data["ch"]
-        @on_close[ch].each { |c| c.call(ch) }
-      when "launch" then
-        ch = data["ch"]
-        @multiplexer.reserve ch
-        @handlers[data["id"]].call(ch)
-        @handlers.delete(data["id"])
-        @processes << ch
-      else
-        raise "no such command: #{command}"
+      dequeue_json do |data|
+        case command = data["command"]
+        when "close" then
+          ch = data["ch"]
+          @on_close[ch].each { |c| c.call(ch) }
+        when "ack" then
+          ch = data["ch"]
+          @multiplexer.reserve ch
+          @handlers[data["id"]].call(ch)
+          @handlers.delete(data["id"])
+          @processes << ch
+        else
+          raise "no such command: #{command}"
+        end
       end
     end
   end
@@ -49,12 +52,18 @@ class Distributor::Client
   end
 
   def run(command, &handler)
-    id = "#{Time.now.to_f}-#{rand(10000)}"
+    id = generate_id
     @multiplexer.output 0, JSON.dump({ "id" => id, "command" => "run", "args" => command })
     @handlers[id] = handler
   end
 
-  def hookup(ch, input, output)
+  def tunnel(port, &handler)
+    id = generate_id
+    @multiplexer.output 0, JSON.dump({ "id" => id, "command" => "tunnel", "port" => port })
+    @handlers[id] = handler
+  end
+
+  def hookup(ch, input, output=input)
     # handle data incoming on the multiplexer
     @connector.handle(@multiplexer.reader(ch)) do |io|
       begin
@@ -83,6 +92,24 @@ class Distributor::Client
 
   def start
     loop { @connector.listen }
+  end
+
+private
+
+  def generate_id
+    id = "#{Time.now.to_f}-#{rand(10000)}"
+  end
+
+  def append_json(data)
+    @json ||= ""
+    @json += data
+  end
+
+  def dequeue_json
+    while idx = @json.index("}")
+      yield JSON.parse(@json[0..idx])
+      @json = @json[idx+1..-1]
+    end
   end
 
 end
