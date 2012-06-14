@@ -1,6 +1,7 @@
 require "distributor"
 require "distributor/connector"
 require "distributor/multiplexer"
+require "json"
 require "pty"
 require "socket"
 
