@@ -1,16 +1,22 @@
 require "distributor"
 require "stringio"
+require "thread"
 
 class Distributor::Packet
 
   PROTOCOL_VERSION = 1
 
   def self.write(io, channel, data)
-    io.write "DIST"
-    io.write pack(PROTOCOL_VERSION)
-    io.write pack(channel)
-    io.write pack(data.length)
-    io.write data
+    @@output ||= Mutex.new
+    @@output.synchronize do
+      buffer = StringIO.new
+      buffer.write "DIST"
+      buffer.write pack(PROTOCOL_VERSION)
+      buffer.write pack(channel)
+      buffer.write pack(data.length)
+      buffer.write data
+      io.write buffer.string
+    end
   end
 
   def self.parse(io)
