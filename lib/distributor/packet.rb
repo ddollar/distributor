@@ -19,8 +19,7 @@ class Distributor::Packet
     version = unpack(io.read(4))
     channel = unpack(io.read(4))
     length  = unpack(io.read(4))
-    data    = ""
-    data   += io.readpartial([4096,length-data.length].min) while data.length < length
+    data    = io.read(length)
 
     [ channel, data ]
   end
