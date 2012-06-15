@@ -32,7 +32,6 @@ class Distributor::Connector
   def close(io)
     @connections.delete(io)
     @on_close[io].each { |c| c.call(io) }
-    exit 1
   end
 
 end

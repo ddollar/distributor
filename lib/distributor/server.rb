@@ -19,7 +19,7 @@ class Distributor::Server
       @multiplexer.input io
     end
 
-    @connector.on_close(input) do |ch|
+    @connector.on_close(input) do |io|
       exit 0
     end
 

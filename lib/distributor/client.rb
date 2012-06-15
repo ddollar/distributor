@@ -84,7 +84,8 @@ class Distributor::Client
         data = io.readpartial(4096)
         @multiplexer.output ch, data
       rescue EOFError
-        @processes.each { |ch| @multiplexer.close(ch) }
+        @on_close[ch].each { |c| p c; c.call(ch) }
+        @connector.close(io)
       end
     end
   end
