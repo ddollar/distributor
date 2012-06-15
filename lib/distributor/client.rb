@@ -2,6 +2,7 @@ require "distributor"
 require "distributor/connector"
 require "distributor/multiplexer"
 require "json"
+require "thread"
 
 class Distributor::Client
 
@@ -10,8 +11,9 @@ class Distributor::Client
     @multiplexer = Distributor::Multiplexer.new(output)
     @handlers    = {}
     @processes   = []
-    @on_close    = Hash.new([])
+    @on_close    = Hash.new { |hash,key| hash[key] = Array.new }
     @on_hello    = []
+    @hookup_lock = Mutex.new
 
     # reserve a command channel
     @multiplexer.reserve(0)
@@ -21,10 +23,9 @@ class Distributor::Client
       @multiplexer.input io
     end
 
-    # @connector.on_close(input) do |io|
-    #   p [:cl1, input]
-    #   @multiplexer.output 0, JSON.dump({ "command" => "close", "ch" => ch })
-    # end
+    @connector.on_close(input) do |io|
+      exit 0
+    end
 
     # handle the command channel of the multiplexer
     @connector.handle(@multiplexer.reader(0)) do |io|
@@ -67,14 +68,17 @@ class Distributor::Client
   end
 
   def hookup(ch, input, output=input)
-    # handle data incoming on the multiplexer
-    @connector.handle(@multiplexer.reader(ch)) do |io|
-      begin
-        data = io.readpartial(4096)
-        # output.write "#{ch}: #{data}"
-        output.write data
-      rescue EOFError
-        @multiplexer.output 0, JSON.dump({ "command" => "close", "ch" => ch })
+    @hookup_lock.synchronize do
+      # handle data incoming on the multiplexer
+      @connector.handle(@multiplexer.reader(ch)) do |io|
+        begin
+          data = io.readpartial(4096)
+          # output.write "#{ch}: #{data}"
+          output.write data
+          output.flush
+        rescue EOFError
+          @multiplexer.output 0, JSON.dump({ "command" => "close", "ch" => ch })
+        end
       end
     end
 

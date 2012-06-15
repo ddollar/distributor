@@ -6,10 +6,11 @@ class Distributor::Connector
 
   def initialize
     @connections = {}
-    @on_close = Hash.new([])
+    @on_close = Hash.new { |hash,key| hash[key] = Array.new }
   end
 
   def handle(from, &handler)
+    return unless from
     @connections[from] = handler
   end
 
@@ -18,13 +19,12 @@ class Distributor::Connector
   end
 
   def listen
-    rs, ws = IO.select(@connections.keys)
-    rs.each do |from|
+    rs, ws = IO.select(@connections.keys, [], [], 1)
+    (rs || []).each do |from|
       begin
-        @on_close.each { |c| c.call(from) } if from.eof?
-        self.connections[from].call(from)
+        @on_close[from].each { |c| c.call(from) } if from.eof?
+        @connections[from].call(from)
       rescue Errno::EIO
-        @connections.delete(from)
       end
     end
   end

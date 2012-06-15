@@ -24,8 +24,12 @@ else
   begin
     client = Distributor::Client.new(IO.popen("ruby subshell.rb server", "w+"))
 
+    client.run("ls -la") do |ch|
+      client.hookup ch, nil, File.open("test.log", "a+")
+    end
+
     client.run("bash 2>&1") do |ch|
-      client.hookup ch, $stdin, $stdout
+      client.hookup ch, $stdin.dup, $stdout.dup
       client.on_close(ch) do
         exit 0
       end
@@ -45,7 +49,6 @@ else
 
     set_buffer false
     client.start
-  rescue Interrupt
   ensure
     set_buffer true
   end
