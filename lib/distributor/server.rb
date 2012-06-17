@@ -94,6 +94,13 @@ class Distributor::Server
     ch
   end
 
+  def command(command, data={})
+    data["id"] ||= @multiplexer.generate_id
+    data["command"] = command
+    @multiplexer.output 0, Distributor::OkJson.encode(data)
+    data["id"]
+  end
+
   def on_command(&blk)
     @on_command = blk
   end

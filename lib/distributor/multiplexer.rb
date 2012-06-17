@@ -45,4 +45,8 @@ class Distributor::Multiplexer
   rescue IOError
   end
 
+  def generate_id
+    id = "#{Time.now.to_f}-#{rand(10000)}"
+  end
+
 end

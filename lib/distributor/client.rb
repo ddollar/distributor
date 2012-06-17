@@ -13,6 +13,7 @@ class Distributor::Client
     @processes   = []
     @on_close    = Hash.new { |hash,key| hash[key] = Array.new }
     @on_hello    = []
+    @on_command  = Proc.new {}
     @hookup_lock = Mutex.new
 
     # reserve a command channel
@@ -45,7 +46,7 @@ class Distributor::Client
           @handlers.delete(data["id"])
           @processes << ch
         else
-          raise "no such command: #{command}"
+          @on_command.call(command, data)
         end
       end
     end
@@ -56,7 +57,7 @@ class Distributor::Client
   end
 
   def command(command, data={})
-    data["id"] ||= generate_id
+    data["id"] ||= @multiplexer.generate_id
     data["command"] = command
     @multiplexer.output 0, Distributor::OkJson.encode(data)
     data["id"]
@@ -107,15 +108,15 @@ class Distributor::Client
     @on_hello << blk
   end
 
+  def on_command(&blk)
+    @on_command = blk
+  end
+
   def start
     loop { @connector.listen }
   end
 
 private
-
-  def generate_id
-    id = "#{Time.now.to_f}-#{rand(10000)}"
-  end
 
   def append_json(data)
     @json ||= ""

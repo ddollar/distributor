@@ -17,7 +17,7 @@ if ARGV.first == "server"
     $stdout = $stderr
 
     server.on_command do |command, data|
-      p [:command, command, data]
+      server.command command, data.merge("ack" => Time.now.to_i)
     end
 
     server.start
@@ -38,6 +38,10 @@ else
       client.on_close(ch) do
         exit 0
       end
+    end
+
+    client.on_command do |command, data|
+      p [:received, command, data]
     end
 
     client.command "foo", "bar" => "baz"
