@@ -55,15 +55,20 @@ class Distributor::Client
     @multiplexer.output ch, data
   end
 
+  def command(command, data={})
+    data["id"] ||= generate_id
+    data["command"] = command
+    @multiplexer.output 0, Distributor::OkJson.encode(data)
+    data["id"]
+  end
+
   def run(command, &handler)
-    id = generate_id
-    @multiplexer.output 0, Distributor::OkJson.encode({ "id" => id, "command" => "run", "args" => command })
+    id = command("run", "args" => command)
     @handlers[id] = handler
   end
 
   def tunnel(port, &handler)
-    id = generate_id
-    @multiplexer.output 0, Distributor::OkJson.encode({ "id" => id, "command" => "tunnel", "port" => port })
+    id = command("tunnel", "port" => port)
     @handlers[id] = handler
   end
 
@@ -77,7 +82,7 @@ class Distributor::Client
           output.write data
           output.flush
         rescue EOFError
-          @multiplexer.output 0, Distributor::OkJson.encode({ "command" => "close", "ch" => ch })
+          command "close", "ch" => ch
         end
       end
     end

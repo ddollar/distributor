@@ -15,6 +15,11 @@ if ARGV.first == "server"
   begin
     server = Distributor::Server.new($stdin.dup, $stdout.dup)
     $stdout = $stderr
+
+    server.on_command do |command, data|
+      p [:command, command, data]
+    end
+
     server.start
   rescue Interrupt
   end
@@ -34,6 +39,8 @@ else
         exit 0
       end
     end
+
+    client.command "foo", "bar" => "baz"
 
     tcp = TCPServer.new(8000)
 

@@ -10,6 +10,7 @@ class Distributor::Server
   def initialize(input, output=input)
     @connector   = Distributor::Connector.new
     @multiplexer = Distributor::Multiplexer.new(output)
+    @on_command  = Proc.new {}
 
     # reserve a command channel
     @multiplexer.reserve(0)
@@ -39,7 +40,7 @@ class Distributor::Server
           ch = run(data["args"])
           @multiplexer.output 0, Distributor::OkJson.encode({ "id" => data["id"], "command" => "ack", "ch" => ch })
         else
-          raise "no such command: #{command}"
+          @on_command.call command, data
         end
       end
     end
@@ -92,6 +93,11 @@ class Distributor::Server
 
     ch
   end
+
+  def on_command(&blk)
+    @on_command = blk
+  end
+
   def start
     @multiplexer.output 0, Distributor::OkJson.encode({ "command" => "hello" })
     loop { @connector.listen }
