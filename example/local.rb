@@ -32,7 +32,7 @@ else
   begin
 
     # create a client that talks to a server created over a subprocess
-    client = Distributor::Client.new(IO.popen("ruby subshell.rb server", "w+"))
+    client = Distributor::Client.new(IO.popen("ruby local.rb server", "w+"))
 
     # output the results of ls -la to test.log, with no input channel
     client.run("ls -la") do |ch|
