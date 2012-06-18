@@ -1,6 +1,6 @@
 # Distributor
 
-TCP multiplexer.
+Socket multiplexer.
 
 ## Usage
 
