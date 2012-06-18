@@ -60,9 +60,11 @@ else
 
     Thread.new do
       loop do
+
+        # every time a connection comes to localhost:8000 on the client
         Thread.start(tcp.accept) do |tcp_client|
 
-          # connect to localhost:5000 on the server and tunnel it back out
+          # create a tunnel to localhost:5000 on the server
           client.tunnel(5000) do |ch|
             client.hookup ch, tcp_client
           end
