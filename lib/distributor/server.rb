@@ -107,7 +107,14 @@ class Distributor::Server
 
   def start
     @multiplexer.output 0, Distributor::OkJson.encode({ "command" => "hello" })
-    loop { @connector.listen }
+
+    loop do
+      begin
+        @connector.listen
+      rescue Exception => ex
+        @multiplexer.output 0, Distributor::OkJson.encode({ "command" => "error", "message" => ex.message, "backtrace" => ex.backtrace.first })
+      end
+    end
   end
 
 private
