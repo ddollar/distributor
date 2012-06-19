@@ -101,6 +101,10 @@ class Distributor::Server
     data["id"]
   end
 
+  def output(ch, data={})
+    @multiplexer.output ch, Distributor::OkJson.encode(data)
+  end
+
   def on_command(&blk)
     @on_command = blk
   end
