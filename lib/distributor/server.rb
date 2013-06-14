@@ -57,10 +57,10 @@ class Distributor::Server
   def run(command)
     ch = @multiplexer.reserve
 
-    rd, wr, pid = PTY.spawn(command)
+    pipe = IO.popen(command, "w+")
 
     # handle data incoming from process
-    @connector.handle(rd) do |io|
+    @connector.handle(pipe) do |io|
       begin
         @multiplexer.output(ch, io.readpartial(4096))
       rescue EOFError
@@ -72,7 +72,7 @@ class Distributor::Server
     # handle data incoming on the multiplexer
     @connector.handle(@multiplexer.reader(ch)) do |input_io|
       data = input_io.readpartial(4096)
-      wr.write data
+      pipe.write data
     end
 
     ch
